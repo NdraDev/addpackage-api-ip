@@ -6,15 +6,16 @@ API untuk mengelola IP addresses dan server data menggunakan Cloudflare Workers 
 
 ## API Endpoints
 
-### IP Management
+### 📍 IP Management
 
 #### `GET /api/add/ip`
 
 Tambah IP address ke database.
 
 **Parameters:**
-
-- `ip` (query) - IP address yang akan ditambahkan
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `ip` | string | ✅ Yes | IP address yang akan ditambahkan |
 
 **Response:**
 
@@ -24,6 +25,12 @@ Tambah IP address ke database.
   "message": "IP berhasil ditambahkan",
   "ip": "1.1.1.1"
 }
+```
+
+**Try it:**
+
+```bash
+curl "https://api.ip.cindra.dev/api/add/ip?ip=1.1.1.1"
 ```
 
 ---
@@ -43,6 +50,12 @@ Tampilkan semua IP addresses yang terdaftar.
 }
 ```
 
+**Try it:**
+
+```bash
+curl "https://api.ip.cindra.dev/api/list/ip"
+```
+
 ---
 
 #### `GET /api/check/ip`
@@ -50,8 +63,9 @@ Tampilkan semua IP addresses yang terdaftar.
 Cek apakah IP address terdaftar.
 
 **Parameters:**
-
-- `ip` (query) - IP address yang akan dicek
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `ip` | string | ✅ Yes | IP address yang akan dicek |
 
 **Response (IP terdaftar):**
 
@@ -75,13 +89,21 @@ Cek apakah IP address terdaftar.
 }
 ```
 
+**Try it:**
+
+```bash
+curl "https://api.ip.cindra.dev/api/check/ip?ip=1.1.1.1"
+```
+
 ---
 
-### Server Data (Requires API Key)
+### 🖥️ Server Data (Requires API Key)
 
 **Header Required:**
 
-- `X-API-Key: 087767867841NdraDev`
+```
+X-API-Key: 087767867841NdraDev
+```
 
 ---
 
@@ -89,11 +111,14 @@ Cek apakah IP address terdaftar.
 
 Simpan atau update data server (IP, username, password).
 
-**Parameters:**
+Jika data dengan IP dan username yang sama sudah ada, maka password akan diupdate.
 
-- `ip` (query) - IP address
-- `username` (query) - Username
-- `password` (query) - Password (disimpan plain text)
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `ip` | string | ✅ Yes | IP address |
+| `username` | string | ✅ Yes | Username |
+| `password` | string | ✅ Yes | Password (disimpan plain text) |
 
 **Response (Data baru):**
 
@@ -113,6 +138,13 @@ Simpan atau update data server (IP, username, password).
   "message": "Password berhasil diupdate",
   "action": "updated"
 }
+```
+
+**Try it:**
+
+```bash
+curl -X POST "https://api.ip.cindra.dev/api/simpan/data?ip=1.1.1.1&username=admin&password=secret123" \
+  -H "X-API-Key: 087767867841NdraDev"
 ```
 
 ---
@@ -143,21 +175,66 @@ Tampilkan semua data server yang tersimpan.
 }
 ```
 
+**Try it:**
+
+```bash
+curl -X POST "https://api.ip.cindra.dev/api/list/data" \
+  -H "X-API-Key: 087767867841NdraDev"
+```
+
 ---
 
-## Getting Started
+## Quick Start
+
+### 1. Add IP
+
+```bash
+curl "https://api.ip.cindra.dev/api/add/ip?ip=1.1.1.1"
+```
+
+### 2. List IPs
+
+```bash
+curl "https://api.ip.cindra.dev/api/list/ip"
+```
+
+### 3. Check IP
+
+```bash
+curl "https://api.ip.cindra.dev/api/check/ip?ip=1.1.1.1"
+```
+
+### 4. Save Server Data (with API Key)
+
+```bash
+curl -X POST "https://api.ip.cindra.dev/api/simpan/data?ip=1.1.1.1&username=admin&password=secret123" \
+  -H "X-API-Key: 087767867841NdraDev"
+```
+
+### 5. List Server Data (with API Key)
+
+```bash
+curl -X POST "https://api.ip.cindra.dev/api/list/data" \
+  -H "X-API-Key: 087767867841NdraDev"
+```
+
+---
+
+## Development
 
 ### Prerequisites
 
-- Node.js
+- Node.js 18+
 - pnpm / npm
 - Cloudflare account
 
 ### Setup
 
-1. Install dependencies:
+1. Clone dan install dependencies:
 
 ```bash
+git clone https://github.com/NdraDev/addpackage-api-ip.git
+cd addpackage-api-ip
 pnpm install
 ```
 
@@ -175,64 +252,60 @@ Update `wrangler.jsonc` dengan `database_id` yang baru.
 npx wrangler d1 migrations apply DB --remote
 ```
 
-4. Deploy:
-
-```bash
-pnpm deploy
-```
-
-5. Development mode:
+4. Development mode:
 
 ```bash
 pnpm dev
 ```
 
----
-
-## Testing
+5. Deploy:
 
 ```bash
-pnpm test
+pnpm deploy
 ```
 
 ---
 
-## Example Usage
+## Database Schema
 
-### Add IP
+### `ip_addresses`
 
-```bash
-curl "https://your-worker.workers.dev/api/add/ip?ip=1.1.1.1"
-```
+| Column     | Type     | Description         |
+| ---------- | -------- | ------------------- |
+| id         | INTEGER  | Primary key         |
+| ip         | TEXT     | IP address (unique) |
+| created_at | DATETIME | Timestamp           |
 
-### List IPs
+### `server_data`
 
-```bash
-curl "https://your-worker.workers.dev/api/list/ip"
-```
+| Column               | Type     | Description           |
+| -------------------- | -------- | --------------------- |
+| id                   | INTEGER  | Primary key           |
+| ip                   | TEXT     | IP address            |
+| username             | TEXT     | Username              |
+| password             | TEXT     | Password (plain text) |
+| created_at           | DATETIME | Timestamp             |
+| updated_at           | DATETIME | Timestamp             |
+| UNIQUE(ip, username) |          |                       |
 
-### Check IP
+---
 
-```bash
-curl "https://your-worker.workers.dev/api/check/ip?ip=1.1.1.1"
-```
+## API Documentation
 
-### Save Server Data (with API Key)
+OpenAPI documentation tersedia di:
 
-```bash
-curl -X POST "https://your-worker.workers.dev/api/simpan/data?ip=1.1.1.1&username=admin&password=secret123" \
-  -H "X-API-Key: 087767867841NdraDev"
-```
-
-### List Server Data (with API Key)
-
-```bash
-curl -X POST "https://your-worker.workers.dev/api/list/data" \
-  -H "X-API-Key: 087767867841NdraDev"
-```
+- `/` - Swagger UI
+- `/openapi.json` - OpenAPI JSON schema
 
 ---
 
 ## License
 
 MIT
+
+---
+
+## Support
+
+- Website: [https://addpackage.dev](https://addpackage.dev)
+- Register: [https://register.addpackage.dev](https://register.addpackage.dev)
