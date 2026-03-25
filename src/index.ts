@@ -3,6 +3,8 @@ import { Hono } from "hono";
 import { tasksRouter } from "./endpoints/tasks/router";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 import { DummyEndpoint } from "./endpoints/dummyEndpoint";
+import { ipRouter } from "./endpoints/ip/router";
+import { serverDataRouter } from "./endpoints/server-data/router";
 
 // Start a Hono app
 const app = new Hono<{ Bindings: Env }>();
@@ -33,17 +35,23 @@ const openapi = fromHono(app, {
 	docs_url: "/",
 	schema: {
 		info: {
-			title: "My Awesome API",
-			version: "2.0.0",
-			description: "This is the documentation for my awesome API.",
+			title: "AddPackage API - IP Management",
+			version: "1.0.0",
+			description: "API untuk mengelola IP addresses dan server data",
 		},
 	},
 });
 
-// Register Tasks Sub router
+// Register IP router
+openapi.route("/api", ipRouter);
+
+// Register Server Data router
+openapi.route("/api", serverDataRouter);
+
+// Register Tasks Sub router (legacy)
 openapi.route("/tasks", tasksRouter);
 
-// Register other endpoints
+// Register other endpoints (legacy)
 openapi.post("/dummy/:slug", DummyEndpoint);
 
 // Export the Hono app
