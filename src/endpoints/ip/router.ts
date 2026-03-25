@@ -1,37 +1,21 @@
-import { createRoute, z } from "chanfana";
 import { Hono } from "hono";
+import { fromHono } from "chanfana";
+import { z } from "zod";
 
-export const ipRouter = new Hono<{ Bindings: Env }>();
+export const ipRouter = fromHono(new Hono<{ Bindings: Env }>());
 
 // GET /api/add/ip - Add IP to database
 ipRouter.get(
   "/add/ip",
-  createRoute({
-    method: "get",
-    path: "/api/add/ip",
-    summary: "Add IP address to database",
-    request: {
-      query: z.object({
-        ip: z.string().describe("IP address to add"),
-      }),
-    },
-    responses: {
-      200: {
-        description: "IP added successfully",
-        content: {
-          "application/json": {
-            schema: z.object({
-              success: z.boolean(),
-              message: z.string(),
-              ip: z.string(),
-            }),
-          },
-        },
-      },
-    },
-  }),
   async (c) => {
-    const { ip } = c.req.valid("query");
+    const ip = c.req.query("ip");
+
+    if (!ip) {
+      return c.json({
+        success: false,
+        message: "Parameter ip diperlukan",
+      }, 400);
+    }
 
     try {
       await c.env.DB.prepare(
@@ -59,26 +43,6 @@ ipRouter.get(
 // GET /api/list/ip - List all IPs
 ipRouter.get(
   "/list/ip",
-  createRoute({
-    method: "get",
-    path: "/api/list/ip",
-    summary: "List all IP addresses",
-    responses: {
-      200: {
-        description: "List of all IP addresses",
-        content: {
-          "application/json": {
-            schema: z.object({
-              success: z.boolean(),
-              total: z.number(),
-              message: z.string(),
-              data: z.array(z.string()),
-            }),
-          },
-        },
-      },
-    },
-  }),
   async (c) => {
     try {
       const result = await c.env.DB.prepare(
@@ -111,34 +75,15 @@ ipRouter.get(
 // GET /api/check/ip - Check if IP is registered
 ipRouter.get(
   "/check/ip",
-  createRoute({
-    method: "get",
-    path: "/api/check/ip",
-    summary: "Check if IP address is registered",
-    request: {
-      query: z.object({
-        ip: z.string().describe("IP address to check"),
-      }),
-    },
-    responses: {
-      200: {
-        description: "IP check result",
-        content: {
-          "application/json": {
-            schema: z.object({
-              success: z.boolean(),
-              ip: z.string(),
-              message: z.string(),
-              tools: z.string().optional(),
-              register: z.string().optional(),
-            }),
-          },
-        },
-      },
-    },
-  }),
   async (c) => {
-    const { ip } = c.req.valid("query");
+    const ip = c.req.query("ip");
+
+    if (!ip) {
+      return c.json({
+        success: false,
+        message: "Parameter ip diperlukan",
+      }, 400);
+    }
 
     try {
       const result = await c.env.DB.prepare(

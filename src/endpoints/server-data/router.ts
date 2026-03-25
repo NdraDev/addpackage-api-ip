@@ -1,7 +1,8 @@
-import { createRoute, z } from "chanfana";
 import { Hono } from "hono";
+import { fromHono } from "chanfana";
+import { z } from "zod";
 
-export const serverDataRouter = new Hono<{ Bindings: Env }>();
+export const serverDataRouter = fromHono(new Hono<{ Bindings: Env }>());
 
 const API_KEY = "087767867841NdraDev";
 
@@ -26,34 +27,17 @@ const apiKeyAuth = async (c: any, next: any) => {
 serverDataRouter.post(
   "/simpan/data",
   apiKeyAuth,
-  createRoute({
-    method: "post",
-    path: "/api/simpan/data",
-    summary: "Save or update server data",
-    request: {
-      query: z.object({
-        ip: z.string().describe("IP address"),
-        username: z.string().describe("Username"),
-        password: z.string().describe("Password"),
-      }),
-    },
-    responses: {
-      200: {
-        description: "Data saved successfully",
-        content: {
-          "application/json": {
-            schema: z.object({
-              success: z.boolean(),
-              message: z.string(),
-              action: z.string(),
-            }),
-          },
-        },
-      },
-    },
-  }),
   async (c) => {
-    const { ip, username, password } = c.req.valid("query");
+    const ip = c.req.query("ip");
+    const username = c.req.query("username");
+    const password = c.req.query("password");
+
+    if (!ip || !username || !password) {
+      return c.json({
+        success: false,
+        message: "Parameter ip, username, dan password diperlukan",
+      }, 400);
+    }
 
     try {
       // Check if data already exists
@@ -101,32 +85,6 @@ serverDataRouter.post(
 serverDataRouter.post(
   "/list/data",
   apiKeyAuth,
-  createRoute({
-    method: "post",
-    path: "/api/list/data",
-    summary: "List all server data",
-    responses: {
-      200: {
-        description: "List of all server data",
-        content: {
-          "application/json": {
-            schema: z.object({
-              success: z.boolean(),
-              total_server: z.number(),
-              message: z.string(),
-              data: z.array(
-                z.object({
-                  ip: z.string(),
-                  username: z.string(),
-                  password: z.string(),
-                })
-              ),
-            }),
-          },
-        },
-      },
-    },
-  }),
   async (c) => {
     try {
       const result = await c.env.DB.prepare(
