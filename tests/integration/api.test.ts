@@ -1,6 +1,5 @@
 import { applyMigrations } from "./apply-migrations";
 import { describe, it, expect, beforeAll } from "vitest";
-import { createExecutionContext, env } from "cloudflare:test";
 
 describe("IP API", () => {
   beforeAll(async () => {
@@ -30,11 +29,19 @@ describe("IP API", () => {
 describe("Server Data API", () => {
   const apiKey = "087767867841NdraDev";
 
-  it("saves server data with valid API key", async () => {
+  it("saves server data with JSON body", async () => {
     const response = await env.FETCH(
-      new Request("http://localhost/api/simpan/data?ip=1.1.1.1&username=admin&password=secret", {
+      new Request("http://localhost/api/simpan/data", {
         method: "POST",
-        headers: { "X-API-Key": apiKey },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey 
+        },
+        body: JSON.stringify({
+          ip: "1.1.1.1",
+          username: "admin",
+          password: "secret"
+        }),
       })
     );
     const data = await response.json();
@@ -43,14 +50,16 @@ describe("Server Data API", () => {
 
   it("rejects request without API key", async () => {
     const response = await env.FETCH(
-      new Request("http://localhost/api/simpan/data?ip=1.1.1.1&username=admin&password=secret", {
+      new Request("http://localhost/api/simpan/data", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ip: "1.1.1.1", username: "admin", password: "secret" }),
       })
     );
     expect(response.status).toBe(401);
   });
 
-  it("lists server data with valid API key", async () => {
+  it("lists server data", async () => {
     const response = await env.FETCH(
       new Request("http://localhost/api/list/data", {
         method: "POST",
